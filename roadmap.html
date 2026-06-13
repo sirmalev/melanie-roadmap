@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 מפת הדרכים של מלני — שמעון הרובוט</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800;900&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a1a;
+    --bg2: #12122a;
+    --card: #1a1a3a;
+    --card-hover: #22224a;
+    --border: rgba(255,255,255,0.06);
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --green: #4ade80;
+    --gold: #fbbf24;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --blue: #60a5fa;
+    --red: #f87171;
+  }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ============= ANIMATED BG ============= */
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ============= NAV ============= */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 12px 24px;
+    background: rgba(10,10,26,0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    direction: rtl;
+  }
+  .nav-logo {
+    font-size: 18px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--pink), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .nav-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .nav-progress-bar {
+    width: 120px;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .nav-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .nav-reset {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+    padding: 4px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .nav-reset:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(248,113,113,0.1);
+  }
+
+  /* ============= HERO ============= */
+  .hero {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 120px 20px 60px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(167,139,250,0.12);
+    border: 1px solid rgba(167,139,250,0.2);
+    color: var(--purple);
+    padding: 6px 18px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    animation: fadeSlideUp 0.8s ease;
+  }
+  .hero h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    animation: fadeSlideUp 0.8s ease 0.1s both;
+  }
+  .hero h1 .grad { background: linear-gradient(135deg, var(--pink), var(--gold), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 500px;
+    margin: 0 auto 30px;
+    animation: fadeSlideUp 0.8s ease 0.2s both;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeSlideUp 0.8s ease 0.3s both;
+  }
+  .hero-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 22px;
+    min-width: 100px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: default;
+  }
+  .hero-stat:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .hero-stat .num {
+    font-size: 28px;
+    font-weight: 900;
+  }
+  .hero-stat .num.green { color: var(--green); }
+  .hero-stat .num.gold { color: var(--gold); }
+  .hero-stat .num.purple { color: var(--purple); }
+  .hero-stat .num.blue { color: var(--blue); }
+  .hero-stat .num.pink { color: var(--pink); }
+  .hero-stat .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ============= TIMELINE ============= */
+  .timeline {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  .phase {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 12px;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeSlideUp 0.6s ease forwards;
+  }
+
+  .phase-line {
+    width: 32px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .phase-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .phase-dot.green { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 0 16px rgba(74,222,128,0.3); }
+  .phase-dot.gold { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 0 16px rgba(251,191,36,0.3); }
+  .phase-dot.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 0 16px rgba(167,139,250,0.3); }
+  .phase-dot.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 0 16px rgba(96,165,250,0.3); }
+  .phase-dot.pink { background: linear-gradient(135deg, #ec4899, #db2777); box-shadow: 0 0 16px rgba(244,114,182,0.3); }
+  .phase-dot.gray { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+  .phase-dot:hover { transform: scale(1.2); }
+
+  .phase-bar {
+    width: 2px;
+    flex: 1;
+    margin: 4px 0;
+    border-radius: 1px;
+    transition: height 0.5s ease;
+  }
+  .phase-bar.green { background: linear-gradient(to bottom, #22c55e, transparent); }
+  .phase-bar.gold { background: linear-gradient(to bottom, #d97706, transparent); }
+  .phase-bar.purple { background: linear-gradient(to bottom, #7c3aed, transparent); }
+  .phase-bar.blue { background: linear-gradient(to bottom, #2563eb, transparent); }
+  .phase-bar.pink { background: linear-gradient(to bottom, #db2777, transparent); }
+
+  .phase-body { flex: 1; min-width: 0; }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .phase-name {
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .phase-arrow {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.3s ease;
+  }
+  .phase-arrow.open { transform: rotate(180deg); }
+  .phase-tag {
+    font-size: 10px;
+    padding: 2px 12px;
+    border-radius: 99px;
+    font-weight: 600;
+    margin-right: auto;
+  }
+  .phase-tag.done { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+  .phase-tag.active { background: rgba(251,191,36,0.12); color: var(--gold); border: 1px solid rgba(251,191,36,0.2); }
+  .phase-tag.pending { background: rgba(167,139,250,0.12); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+  .phase-tag.future { background: rgba(96,165,250,0.12); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+
+  .phase-progress {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 0 4px 0;
+  }
+  .phase-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Tasks container */
+  .tasks-wrap {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease, margin 0.4s ease;
+    opacity: 0;
+    margin-top: 0;
+  }
+  .tasks-wrap.open {
+    max-height: 2000px;
+    opacity: 1;
+    margin-top: 8px;
+  }
+  .tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .task::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .task:hover {
+    background: var(--card-hover);
+    transform: translateX(-4px) scale(1.01);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .task:hover::before { opacity: 1; }
+  .task:active { transform: translateX(-2px) scale(0.99); }
+
+  .task-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    margin-top: 1px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 1;
+  }
+  .task-check.completed {
+    background: var(--green);
+    color: #0a0a1a;
+    box-shadow: 0 0 12px rgba(74,222,128,0.4);
+  }
+  .task-check.active-state {
+    background: var(--gold);
+    color: #0a0a1a;
+    box-shadow: 0 0 12px rgba(251,191,36,0.4);
+  }
+  .task-check.empty {
+    border: 2px solid rgba(255,255,255,0.15);
+    background: transparent;
+  }
+  .task:hover .task-check.empty { border-color: rgba(255,255,255,0.3); }
+  .task-check.completed:hover { transform: scale(1.15); }
+  .task-check.empty:hover { border-color: var(--green); background: rgba(74,222,128,0.1); }
+
+  .task-text { flex: 1; position: relative; z-index: 1; }
+  .task-text .name { font-size: 14px; font-weight: 600; transition: color 0.3s; }
+  .task-text .desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .task-text .details {
+    font-size: 12px;
+    color: #6666aa;
+    margin-top: 6px;
+    line-height: 1.5;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 0;
+    border-top: 1px solid transparent;
+    padding-top: 0;
+  }
+  .task-text .details.open {
+    max-height: 500px;
+    opacity: 1;
+    border-top-color: var(--border);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+  .task.completed .name { color: var(--green); }
+  .task.completed .desc { color: rgba(74,222,128,0.5); }
+  .task.completed .task-check.completed:hover { box-shadow: 0 0 20px rgba(74,222,128,0.6); }
+  .task.active .name { color: var(--gold); }
+
+  .task-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    color: var(--muted);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* ============= DETAIL POPUP ============= */
+  .detail-popup {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 200;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .detail-popup.show {
+    display: flex;
+    opacity: 1;
+  }
+  .detail-popup-inner {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 480px;
+    width: 100%;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .detail-popup.show .detail-popup-inner {
+    transform: scale(1);
+  }
+  .detail-popup h3 {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  .detail-popup p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .detail-popup .close-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    margin-top: 12px;
+    transition: all 0.2s;
+  }
+  .detail-popup .close-btn:hover {
+    background: var(--card-hover);
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  /* ============= FOOTER ============= */
+  .footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 40px 20px 60px;
+    max-width: 600px;
+    margin: 0 auto;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+  .footer .shimon {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .footer .shimon .emoji { text-decoration: none; }
+  .footer .quote {
+    font-size: 12px;
+    color: rgba(255,255,255,0.15);
+    margin-top: 4px;
+    font-style: italic;
+  }
+  .footer .tasks-done-count {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  /* ============= ANIMATIONS ============= */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(251,191,36,0.3); }
+    50% { box-shadow: 0 0 20px rgba(251,191,36,0.6); }
+  }
+  .task.active .task-check.active-state {
+    animation: glow 2s infinite;
+  }
+
+  /* ============= CONFETTI ============= */
+  .confetti-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 150;
+    overflow: hidden;
+  }
+  .confetti {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ============= RESPONSIVE ============= */
+  @media (max-width: 640px) {
+    .nav { padding: 10px 14px; }
+    .nav-progress-bar { width: 80px; }
+    .hero { padding-top: 100px; padding-bottom: 40px; }
+    .hero-stat { padding: 10px 16px; min-width: 80px; }
+    .hero-stat .num { font-size: 22px; }
+    .phase { gap: 12px; }
+    .phase-line { width: 24px; }
+    .phase-dot { width: 24px; height: 24px; font-size: 11px; }
+    .phase-name { font-size: 15px; }
+    .task { padding: 8px 10px; }
+    .task-text .name { font-size: 13px; }
+    .detail-popup-inner { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background Canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-logo">🎯 מלני · מפת דרכים</div>
+  <div class="nav-progress">
+    <span id="progress-text">0%</span>
+    <div class="nav-progress-bar">
+      <div class="nav-progress-fill" id="progress-fill"></div>
+    </div>
+    <button class="nav-reset" onclick="resetAll()">↺ אפס</button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">🕶️ בהובלת שמעון הרובוט</div>
+  <h1><span class="grad">🎯 מפת הדרכים</span><br>של מלני</h1>
+  <p>מבחורה עם חולצת ארסנל → אימפריית תוכן כדורגל 🦁</p>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="num green" id="stat-done">0</div>
+      <div class="lbl">✅ הושלם</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num gold">1</div>
+      <div class="lbl">🔄 בתהליך</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num purple" id="stat-pending">0</div>
+      <div class="lbl">📋 בתור</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num pink">5</div>
+      <div class="lbl">🔧 סקילים דרושים</div>
+    </div>
+  </div>
+</section>
+
+<!-- Timeline -->
+<section class="timeline">
+
+  <!-- PHASE 1: תשתיות -->
+  <div class="phase" style="animation-delay:0.1s">
+    <div class="phase-line">
+      <div class="phase-dot green" title="הושלם">✓</div>
+      <div class="phase-bar green"></div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-name">🏗️ תשתיות</span>
+        <span class="phase-tag done">הושלם</span>
+        <span class="phase-arrow">▼</span>
+      </div>
+      <div class="phase-progress"><div class="phase-progress-fill" style="width:100%;background:var(--green)"></div></div>
+      <div class="tasks-wrap open">
+        <div class="tasks">
+          <div class="task completed" onclick="toggleTask(this)" data-details="'Shimon bot' מחובר למרחב Notion של 'Sir Malev\'s space'. יש גישה לשני דאטה-בייסים: משימות עבודה ומשימות בית. | ✅ נבדק ועובד">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">🔌 חיבור Notion</div>
+              <div class="desc">Shimon bot במרחב Sir Malev's space</div>
+              <div class="details"><span class="task-tag">פרטים</span>'Shimon bot' מחובר למרחב Notion של 'Sir Malev's space'. יש גישה לשני דאטה-בייסים: משימות עבודה ומשימות בית.<br><br>✅ נבדק ועובד</div>
+            </div>
+          </div>
+          <div class="task completed" onclick="toggleTask(this)" data-details="CalDAV מחובר בהצלחה. יומנים: Workout, Friends, Else, Reminders, Home, Work. | 📅 חיבור יציב">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">📅 חיבור Apple Calendar</div>
+              <div class="desc">CalDAV — יומני Workout, Friends, Work</div>
+              <div class="details"><span class="task-tag">פרטים</span>CalDAV מחובר בהצלחה. יומנים: Workout, Friends, Else, Reminders, Home, Work.<br><br>📅 חיבור יציב</div>
+            </div>
+          </div>
+          <div class="task completed" onclick="toggleTask(this)" data-details="sir.alonmalev — חשבון Spotify מחובר. אפשר לקרוא מצב נוכחי, לשנות פלייליסטים ולשלוט בהשמעה. | 🎵 שליטה מלאה">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">🎵 חיבור Spotify</div>
+              <div class="desc">sir.alonmalev מחובר</div>
+              <div class="details"><span class="task-tag">פרטים</span>sir.alonmalev — חשבון Spotify מחובר. אפשר לקרוא מצב נוכחי, לשנות פלייליסטים ולשלוט בהשמעה.<br><br>🎵 שליטה מלאה</div>
+            </div>
+          </div>
+          <div class="task completed" onclick="toggleTask(this)" data-details="shimonbuchbot@gmail.com — חיבור Gmail (IMAP/SMTP). App password שמור בקובץ .env.gmail. | 📧 קריאה ושליחה">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">📧 חיבור Gmail</div>
+              <div class="desc">shimonbuchbot@gmail.com (IMAP/SMTP)</div>
+              <div class="details"><span class="task-tag">פרטים</span>shimonbuchbot@gmail.com — חיבור Gmail (IMAP/SMTP). App password שמור בקובץ .env.gmail.<br><br>📧 קריאה ושליחה בסיסית</div>
+            </div>
+          </div>
+          <div class="task completed" onclick="toggleTask(this)" data-details="שני דאטה-בייסים: 'משימות עבודה' (ID: 37be4c33...) ו'משימות בית' (ID: 37be4c33...). עמודות: משימה, בוצע, דד-ליין, תאריך הקמה. | 🗄️ מאורגן">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">🗄️ דאטה-בייס משימות</div>
+              <div class="desc">Work Tasks & Home Tasks ב-Notion</div>
+              <div class="details"><span class="task-tag">פרטים</span>שני דאטה-בייסים: 'משימות עבודה' ו'משימות בית'. עמודות: משימה, בוצע, דד-ליין, תאריך הקמה.<br><br>🗄️ מאורגן ומוכן</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2: דמות -->
+  <div class="phase" style="animation-delay:0.2s">
+    <div class="phase-line">
+      <div class="phase-dot green" title="הושלם">✓</div>
+      <div class="phase-bar green"></div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-name">🎭 דמות — זהות וחזות</span>
+        <span class="phase-tag done">הושלם</span>
+        <span class="phase-arrow">▼</span>
+      </div>
+      <div class="phase-progress"><div class="phase-progress-fill" style="width:100%;background:var(--green)"></div></div>
+      <div class="tasks-wrap open">
+        <div class="tasks">
+          <div class="task completed" onclick="toggleTask(this)" data-details="נוצרו תמונות ראשונות באיכות גבוהה של מלני בחולצת ארסנל. הסגנון הוא 'בלוג טבעי' — לא סטודיו אלא אווירה ספונטנית ואותנטית. | 🖼️ לוק מצוין">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">🖼️ תמונות ראשונות של מלני</div>
+              <div class="desc">חולצת ארסנל, סגנון בלוג טבעי</div>
+              <div class="details"><span class="task-tag">פרטים</span>נוצרו תמונות ראשונות באיכות גבוהה של מלני בחולצת ארסנל. הסגנון הוא 'בלוג טבעי' — לא סטודיו אלא אווירה ספונטנית ואותנטית.<br><br>🖼️ לוק מצוין, עקבי</div>
+            </div>
+          </div>
+          <div class="task completed" onclick="toggleTask(this)" data-details="פרסונה: שנונה, מקצועית. רקע מסתורי — אי לא-ידוע ליד אוסטרליה. משלבת ניתוח מקצועי של כדורגל עם רכילות 'צהובה'. | 📝 ברורה וחדה">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">📝 הגדרת פרסונה</div>
+              <div class="desc">שנונה, מקצועית, רקע מסתורי</div>
+              <div class="details"><span class="task-tag">פרטים</span>פרסונה: שנונה, מקצועית. רקע מסתורי — אי לא-ידוע ליד אוסטרליה. משלבת ניתוח מקצועי של כדורגל עם רכילות 'צהובה'.<br><br>📝 ברורה וחדה</div>
+            </div>
+          </div>
+          <div class="task completed" onclick="toggleTask(this)" data-details="Gemma 4 2B (e2b) — מודל AI multimodal שרץ מקומי. נמחק בהמשך בהתאם לבקשה. היה אמור לשמש לניתוח תמונות וכתיבת תוכן. | 🤖 היה ונמחק">
+            <div class="task-check completed">✓</div>
+            <div class="task-text">
+              <div class="name">🤖 מודל AI מקומי</div>
+              <div class="desc">Gemma 4 2B (נמחק בשלב מאוחר יותר)</div>
+              <div class="details"><span class="task-tag">פרטים</span>Gemma 4 2B (e2b) — מודל AI multimodal שרץ מקומי. נמחק בהמשך בהתאם לבקשה.<br><br>🤖 היה ונמחק, עוברים לענן</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3: מנוע תוכן -->
+  <div class="phase" style="animation-delay:0.35s">
+    <div class="phase-line">
+      <div class="phase-dot gold" title="בתהליך">!</div>
+      <div class="phase-bar gold"></div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-name">⚡ מנוע תוכן</span>
+        <span class="phase-tag active">בתהליך</span>
+        <span class="phase-arrow">▼</span>
+      </div>
+      <div class="phase-progress"><div class="phase-progress-fill" style="width:10%;background:var(--gold)"></div></div>
+      <div class="tasks-wrap open">
+        <div class="tasks">
+          <div class="task active" onclick="toggleTask(this)" data-details="המשימה הדחופה ביותר! צריך: (1) חשבון ElevenLabs, (2) לבחור קול (בריטי? אוסטרלי? אמריקאי?), (3) טון (מקצועי? שובב? סקסי?), (4) להגדיר API Key, (5) ליצור Voice ID ייחודי למלני. | 🎤 השלב הבא!">
+            <div class="task-check active-state">!</div>
+            <div class="task-text">
+              <div class="name">🎤 ElevenLabs — קול למלני</div>
+              <div class="desc">בחירת סגנון קול, הגדרת API, Voice ID</div>
+              <div class="details open"><span class="task-tag">זה מה שדחוף עכשיו</span>צריך:<br><br>
+                1️⃣ חשבון ElevenLabs<br>
+                2️⃣ לבחור סגנון קול (בריטי? אוסטרלי? אמריקאי?)<br>
+                3️⃣ טון דיבור (מקצועי? שובב? סקסי? סמכותי?)<br>
+                4️⃣ להגדיר API Key<br>
+                5️⃣ ליצור Voice ID ייחודי למלני<br><br>
+                🔴 <strong>זו המשימה הבאה בתור!</strong></div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="דאטה-בייס ב-Notion לניהול תוכן. עמודות: סטטוס (טיוטה/מוכן/פורסם), תסריט, מדיה, תאריך פרסום, פלטפורמה, הערות. | 📋 הכי בסיסי, בוא נבנה">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">📋 לוח תוכן ב-Notion</div>
+              <div class="desc">דאטה-בייס: סטטוס, תסריט, מדיה, לו"ז</div>
+              <div class="details"><span class="task-tag">פרטים</span>דאטה-בייס ב-Notion לניהול תוכן. עמודות: סטטוס (טיוטה/מוכן/פורסם), תסריט, מדיה, תאריך פרסום, פלטפורמה, הערות.<br><br>📋 הכלי הכי בסיסי לניהול תוכן</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="Skill שיסרוק את הרשת daily: חדשות ארסנל, כדורגל עולמי, שמועות רכש, רכילות צהובה. יסכם תקצירים מוכנים למלני להגיב עליהם. | 📰 אוטומציה שתחסוך לך זמן">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">📰 איסוף חדשות כדורגל אוטומטי</div>
+              <div class="desc">סריקה יומית — ארסנל + כדורגל עולמי</div>
+              <div class="details"><span class="task-tag">פרטים</span>Skill שיסרוק את הרשת daily: חדשות ארסנל, כדורגל עולמי, שמועות רכש, רכילות צהובה. יסכם תקצירים מוכנים למלני להגיב עליהם.<br><br>📰 אוטומציה שתחסוך לך שעות</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="צריך להחליט על הפורמט המדויק: Reels קצרים? ניתוחים שבועיים עמוקים? שילוב של שניהם? 'מלני מנתחת את המחזור'? יומון? | 🎬 להחליט ביחד">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">🎬 בחירת פורמט תוכן</div>
+              <div class="desc">Reels? ניתוחים? שילוב?</div>
+              <div class="details"><span class="task-tag">פרטים</span>צריך להחליט על הפורמט המדויק:<br><br>
+                🅰️ Reels קצרים — ניתוחי משחק, רכילות<br>
+                🅱️ סדרה שבועית — 'מלני מנתחת את המחזור'<br>
+                🅲 שילוב — יומון + סרטון שבועי מעמיק<br><br>
+                🎬 בוא נחליט!</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="לשמור ב-Notion את כל התמונות והפרומפטים שהצליחו. ככה נשמור על עקביות ויזואלית ונוכל לשחזר לוקים מוצלחים. | 🖼️ עקביות = מותג חזק">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">🖼️ ארכיון ויזואלי ב-Notion</div>
+              <div class="desc">תמונות + Prompts לשמירת עקביות</div>
+              <div class="details"><span class="task-tag">פרטים</span>לשמור ב-Notion את כל התמונות והפרומפטים שהצליחו. ככה נשמור על עקביות ויזואלית ונוכל לשחזר לוקים מוצלחים.<br><br>🖼️ עקביות = מותג חזק יותר</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 4: יצירה והפקה -->
+  <div class="phase" style="animation-delay:0.5s">
+    <div class="phase-line">
+      <div class="phase-dot purple" title="מתוכנן">4</div>
+      <div class="phase-bar purple"></div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-name">🎬 יצירה והפקה</span>
+        <span class="phase-tag pending">מתוכנן</span>
+        <span class="phase-arrow">▼</span>
+      </div>
+      <div class="phase-progress"><div class="phase-progress-fill" style="width:0%;background:var(--purple)"></div></div>
+      <div class="tasks-wrap">
+        <div class="tasks">
+          <div class="task" onclick="toggleTask(this)" data-details="HeyGen / D-ID — יצירת סרטונים עם תמונה מדברת. אחרי שיש למלני קול (ElevenLabs), נחבר לתמונה שלה וניצור וידאו שבו היא מדברת ישירות למצלמה. | 🎥 הקסם האמיתי">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">🎥 וידאו (HeyGen / D-ID)</div>
+              <div class="desc">תמונה מדברת — מלני מדברת כדורגל</div>
+              <div class="details"><span class="task-tag">פרטים</span>HeyGen / D-ID — יצירת סרטונים עם תמונה מדברת. אחרי שיש למלני קול (ElevenLabs), נחבר לתמונה שלה וניצור וידאו שבו היא מדברת ישירות למצלמה.<br><br>🎥 הקסם האמיתי — תוכן וידאו!</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="כתיבת התסריט לפוסט הבכורה. היכרות עם מלני: מי היא, מה היא אוהבת, למה כדורגל, מה הולך להיות כאן. וייב ראשוני. | ✍️ הרושם הראשון הכי חשוב">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">✍️ כתיבת תסריט ראשון</div>
+              <div class="desc">פוסט בכורה — היכרות עם מלני</div>
+              <div class="details"><span class="task-tag">פרטים</span>כתיבת התסריט לפוסט הבכורה. היכרות עם מלני: מי היא, מה היא אוהבת, למה כדורגל, מה הולך להיות כאן.<br><br>✍️ הרושם הראשון — הכי חשוב!</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="הפקת הסט השלם לפוסט ראשון: תמונה ראשית, וידאו (אם רלוונטי), קריינות, טקסטים נלווים (Bio, תיאור). | 📸 סט שלם ומגובש">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">📸 הפקת מדיה לפוסט ראשון</div>
+              <div class="desc">תמונות + וידאו + קריינות</div>
+              <div class="details"><span class="task-tag">פרטים</span>הפקת הסט השלם לפוסט ראשון: תמונה ראשית, וידאו (אם רלוונטי), קריינות, טקסטים נלווים (Bio, תיאור).<br><br>📸 סט שלם ומגובש</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 5: השקה -->
+  <div class="phase" style="animation-delay:0.65s">
+    <div class="phase-line">
+      <div class="phase-dot blue" title="בהמשך">5</div>
+      <div class="phase-bar blue"></div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-name">🚀 השקה וצמיחה</span>
+        <span class="phase-tag future">בהמשך</span>
+        <span class="phase-arrow">▼</span>
+      </div>
+      <div class="phase-progress"><div class="phase-progress-fill" style="width:0%;background:var(--blue)"></div></div>
+      <div class="tasks-wrap">
+        <div class="tasks">
+          <div class="task" onclick="toggleTask(this)" data-details="יצירת החשבון: שם משתמש, Bio מושך, תמונת פרופיל, נראות עקבית. אפשר גם לשמור שמירת שמות בפלטפורמות נוספות. | 📱 חייבים בית למלני">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">📱 פתיחת חשבון אינסטגרם</div>
+              <div class="desc">פרופיל, Bio, תמונת פרופיל</div>
+              <div class="details"><span class="task-tag">פרטים</span>יצירת החשבון: שם משתמש, Bio מושך, תמונת פרופיל, נראות עקבית. אפשר גם לשמור שמירת שמות בפלטפורמות נוספות (TikTok, YouTube).<br><br>📱 חייבים בית למלני</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="🔥 הרגע הגדול! הפוסט הראשון עולה לאוויר. זה הרגע שבו הכול מתחיל. | 🎯 מוכן? בוא!" style="border-color: rgba(251,191,36,0.15);">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">🎯 פוסט ראשון לאוויר 🔥</div>
+              <div class="desc">❚█══ THE BIG MOMENT ══█❚</div>
+              <div class="details"><span class="task-tag">זה הרגע</span>🔥 <strong>הרגע הגדול!</strong><br><br>הפוסט הראשון עולה לאוויר. כל העבודה עד עכשיו — התמונות, הקול, התסריט, הלו"ז — הכל מתכנס לרגע הזה.<br><br>🎯 <strong>מוכן? בוא נעשה את זה!</strong></div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="קביעת תדירות פרסומים: כמה פעמים בשבוע? באילו ימים? שעה קבועה? לוח מסודר = קהל שמצפה לתוכן. | 📊 סדר = הצלחה">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">📊 לו"ז פרסומים קבוע</div>
+              <div class="desc">תדירות, ימים קבועים, שעה</div>
+              <div class="details"><span class="task-tag">פרטים</span>קביעת תדירות פרסומים: כמה פעמים בשבוע? באילו ימים? שעה קבועה? לוח מסודר = קהל שמצפה לתוכן.<br><br>📊 סדר = הצלחה</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="אחרי אינסטגרם—להתרחב לטיקטוק (Reels) ו/או יוטיוב שורטס. תוכן מותאם לפלטפורמה. כל פלטפורמה = קהל חדש. | 📈 להכפיל את החשיפה">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">📈 הרחבת פלטפורמות</div>
+              <div class="desc">טיקטוק? יוטיוב שורטס?</div>
+              <div class="details"><span class="task-tag">פרטים</span>אחרי אינסטגרם — להתרחב לטיקטוק (Reels) ו/או יוטיוב שורטס. תוכן מותאם לפלטפורמה. כל פלטפורמה = קהל חדש לגמרי.<br><br>📈 להכפיל את החשיפה</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 6: מונטיזציה -->
+  <div class="phase" style="animation-delay:0.8s">
+    <div class="phase-line">
+      <div class="phase-dot pink" title="טווח ארוך">6</div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-name">💰 מונטיזציה</span>
+        <span class="phase-tag future">טווח ארוך</span>
+        <span class="phase-arrow">▼</span>
+      </div>
+      <div class="phase-progress"><div class="phase-progress-fill" style="width:0%;background:var(--pink)"></div></div>
+      <div class="tasks-wrap">
+        <div class="tasks">
+          <div class="task" onclick="toggleTask(this)" data-details="מותגי בגדי ספורט, ציוד ספורט, הימורי ספורט, ואפילו מותגי בירה/משקאות. פוסטים ממומנים. | 🤝 ההכנסה היציבה הראשונה">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">🤝 שותפויות מותגי ספורט</div>
+              <div class="desc">בגדי ספורט, ציוד, מותגים</div>
+              <div class="details"><span class="task-tag">פרטים</span>מותגי בגדי ספורט, ציוד ספורט, הימורי ספורט, ואפילו מותגי בירה/משקאות. פוסטים ממומנים.<br><br>🤝 ההכנסה היציבה הראשונה</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="קישורי affiliate: FanToken, כרטיסים, מנויים לספורט, מוצרים. קהל לוחץ = אתה מרוויח אחוזים. | 🔗 הכנסה פאסיבית">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">🔗 שיווק שותפים (Affiliate)</div>
+              <div class="desc">קישורים עם עמלה</div>
+              <div class="details"><span class="task-tag">פרטים</span>קישורי affiliate: FanToken, כרטיסים, מנויים לספורט, מוצרים. קהל לוחץ = אתה מרוויח אחוזים.<br><br>🔗 הכנסה פאסיבית</div>
+            </div>
+          </div>
+          <div class="task" onclick="toggleTask(this)" data-details="תוכן פרימיום — נדון בהמשך. אפשרות ליצירת תוכן אקסלוסיבי בתשלום. | 🔞 אופציה שנשאירה פתוחה">
+            <div class="task-check empty"></div>
+            <div class="task-text">
+              <div class="name">🔞 OnlyFans (אופציה)</div>
+              <div class="desc">תוכן פרימיום בתשלום</div>
+              <div class="details"><span class="task-tag">פרטים</span>תוכן פרימיום — נדון בהמשך. אפשרות ליצירת תוכן אקסלוסיבי בתשלום.<br><br>🔞 אופציה שנשאיר פתוחה להמשך</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- Detail Popup -->
+<div class="detail-popup" id="detailPopup" onclick="closePopup(event)">
+  <div class="detail-popup-inner" onclick="event.stopPropagation()">
+    <h3 id="popup-title"></h3>
+    <p id="popup-desc"></p>
+    <button class="close-btn" onclick="closePopup()">סגור ✕</button>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="shimon">נוצר על ידי <strong>שמעון הרובוט</strong> 🕶️ | <span id="footer-count">0</span>/21 משימות</div>
+  <div class="quote">"אחלה גבר וסוכן נאמן"</div>
+  <div class="tasks-done-count" id="footer-next" style="font-size:12px">השלב הבא: ElevenLabs — לתת למלני קול 🎤</div>
+</footer>
+
+<script>
+  // ============= DATA =============
+  // Each task's completion status (saved in localStorage)
+  const STORAGE_KEY = 'melanie_roadmap_v1';
+  let taskData = {};
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      taskData = raw ? JSON.parse(raw) : {};
+    } catch(e) { taskData = {}; }
+  }
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(taskData));
+  }
+  loadData();
+
+  // ============= TASK CLICK =============
+  function toggleTask(el) {
+    // Don't toggle for completed or active tasks on left click
+    const check = el.querySelector('.task-check');
+    if (!check) return;
+    
+    const details = el.querySelector('.details');
+    if (details) {
+      details.classList.toggle('open');
+    }
+
+    // Show popup on first click for non-completed tasks
+    // Completed tasks just toggle details
+  }
+
+  // ============= PHASE TOGGLE =============
+  function togglePhase(header) {
+    const wrap = header.parentElement.querySelector('.tasks-wrap');
+    const arrow = header.querySelector('.phase-arrow');
+    if (!wrap || !arrow) return;
+    
+    wrap.classList.toggle('open');
+    arrow.classList.toggle('open');
+  }
+
+  // ============= DETAIL POPUP =============
+  function showPopup(el) {
+    const name = el.querySelector('.name')?.textContent || 'משימה';
+    const details = el.querySelector('.details');
+    const desc = details ? details.innerHTML.replace(/<span class="task-tag">.*?<\/span>/, '') : 'אין פרטים נוספים';
+    
+    document.getElementById('popup-title').textContent = name;
+    document.getElementById('popup-desc').innerHTML = desc;
+    document.getElementById('detailPopup').classList.add('show');
+  }
+
+  function closePopup(e) {
+    document.getElementById('detailPopup').classList.remove('show');
+  }
+
+  // ============= COMPLETION TOGGLE =============
+  document.addEventListener('click', function(e) {
+    const task = e.target.closest('.task');
+    if (!task) return;
+    
+    const check = e.target.closest('.task-check');
+    if (!check) return;
+    
+    // Don't toggle "active" tasks (ElevenLabs)
+    if (check.classList.contains('active-state')) return;
+    
+    // Toggle completion
+    const wasCompleted = task.classList.contains('completed');
+    
+    // Generate a key from the task name
+    const nameEl = task.querySelector('.name');
+    if (!nameEl) return;
+    const key = nameEl.textContent.trim();
+    
+    if (wasCompleted) {
+      task.classList.remove('completed');
+      check.classList.remove('completed');
+      check.classList.add('empty');
+      check.textContent = '';
+      taskData[key] = false;
+    } else {
+      task.classList.add('completed');
+      check.classList.add('completed');
+      check.classList.remove('empty');
+      check.textContent = '✓';
+      taskData[key] = true;
+      
+      // Confetti!
+      if (Math.random() > 0.3) spawnConfetti();
+    }
+    
+    saveData();
+    updateProgress();
+  });
+
+  // ============= RESTORE STATE =============
+  function restoreState() {
+    document.querySelectorAll('.task').forEach(task => {
+      const nameEl = task.querySelector('.name');
+      if (!nameEl) return;
+      const key = nameEl.textContent.trim();
+      
+      // Skip the active task (ElevenLabs) - it has special styling
+      if (taskData[key] === true && !task.querySelector('.active-state')) {
+        task.classList.add('completed');
+        const check = task.querySelector('.task-check');
+        if (check) {
+          check.classList.add('completed');
+          check.classList.remove('empty');
+          check.textContent = '✓';
+        }
+      }
+    });
+    updateProgress();
+  }
+
+  // ============= PROGRESS =============
+  function updateProgress() {
+    const total = document.querySelectorAll('.task').length;
+    const done = document.querySelectorAll('.task.completed').length;
+    const pct = Math.round((done / total) * 100);
+    
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = pct + '%';
+    document.getElementById('stat-done').textContent = done;
+    document.getElementById('stat-pending').textContent = total - done;
+    document.getElementById('footer-count').textContent = done + '/' + total;
+    
+    // Next step hint
+    const nextHint = document.getElementById('footer-next');
+    if (done === total) {
+      nextHint.textContent = '🎉 כל המשימות הושלמו! מלכה!';
+    } else {
+      // Find first non-completed task in "active" or earliest phase
+      const phases = document.querySelectorAll('.phase');
+      let found = false;
+      phases.forEach(phase => {
+        const tasks = phase.querySelectorAll('.task:not(.completed):not(.active)');
+        if (!found && tasks.length > 0) {
+          const first = tasks[0];
+          const name = first.querySelector('.name')?.textContent || '';
+          const tag = phase.querySelector('.phase-name')?.textContent || '';
+          nextHint.textContent = '⏭️ הבא: ' + name;
+          found = true;
+        }
+      });
+      if (!found) {
+        const active = document.querySelector('.task.active');
+        if (active) {
+          const name = active.querySelector('.name')?.textContent || '';
+          nextHint.textContent = '🔄 ממשיכים עם: ' + name;
+        }
+      }
+    }
+  }
+
+  // ============= RESET ALL =============
+  function resetAll() {
+    if (!confirm('לאפס את כל ההתקדמות?')) return;
+    
+    localStorage.removeItem(STORAGE_KEY);
+    taskData = {};
+    
+    document.querySelectorAll('.task.completed').forEach(task => {
+      task.classList.remove('completed');
+      const check = task.querySelector('.task-check');
+      if (check) {
+        check.classList.remove('completed');
+        check.classList.add('empty');
+        check.textContent = '';
+      }
+    });
+    
+    updateProgress();
+  }
+
+  // ============= CONFETTI =============
+  function spawnConfetti() {
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    
+    const colors = ['#4ade80', '#fbbf24', '#a78bfa', '#f472b6', '#60a5fa', '#f87171', '#fb923c'];
+    
+    for (let i = 0; i < 40; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti';
+      piece.style.left = Math.random() * 100 + '%';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (Math.random() * 6 + 4) + 'px';
+      piece.style.height = (Math.random() * 6 + 4) + 'px';
+      piece.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+      piece.style.animationDelay = (Math.random() * 0.5) + 's';
+      container.appendChild(piece);
+    }
+    
+    setTimeout(() => container.remove(), 4000);
+  }
+
+  // ============= BG CANVAS (particle network) =============
+  (function() {
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let animId;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.speedY = (Math.random() - 0.5) * 0.4;
+        this.opacity = Math.random() * 0.5 + 0.1;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+          this.reset();
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(167, 139, 250, ${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    const count = Math.min(60, Math.floor(canvas.width * canvas.height / 20000));
+    for (let i = 0; i < count; i++) particles.push(new Particle());
+
+    function drawLines() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(167, 139, 250, ${0.06 * (1 - dist / 150)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      drawLines();
+      animId = requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+
+  // ============= INIT =============
+  restoreState();
+</script>
+
+</body>
+</html>
